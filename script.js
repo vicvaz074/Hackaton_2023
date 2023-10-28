@@ -3,6 +3,9 @@ const userInput = document.getElementById('userInput');
 const sendBtn = document.getElementById('sendBtn');
 const scheduleBtn = document.querySelector('.schedule-btn');
 const scheduleForm = document.querySelector('.form-container');
+const modal = document.getElementById("imageModal");
+const closeModal = document.getElementById("closeModal");
+const uploadImageBtn = document.getElementById("uploadImageBtn");
 
 var selectedCar = null;
 
@@ -17,8 +20,15 @@ function displayUserMessage(message) {
     chatArea.appendChild(messageDiv);
 }
 
+function hideTypingAnimation() {
+    const typingAnimations = document.querySelectorAll('.typing-animation');
+    typingAnimations.forEach(animation => {
+        animation.style.display = 'none';
+    });
+}
+
 function displayBotMessage(message) {
-    document.querySelector('.typing-animation').style.display = 'none';
+    hideTypingAnimation();
     const messageDiv = document.createElement('div');
     messageDiv.className = 'chat-message bot-message';
     messageDiv.innerText = message;
@@ -28,7 +38,7 @@ function displayBotMessage(message) {
 car1.addEventListener("click", async function() {
     selectedCar = "Car1"; 
     updateHeaderAndButtonsVisibility(selectedCar);
-  });
+});
   
 car2.addEventListener("click", async function() {
     selectedCar = "Car2"; 
@@ -46,7 +56,6 @@ returnButton.addEventListener("click", function() {
 });
 
 function updateHeaderAndButtonsVisibility(carName) {
-    // Insert any asynchronous operations here
     document.getElementById("header").innerText = carName;
     document.getElementById("car1").style.display = "none";
     document.getElementById("car2").style.display = "none";
@@ -91,7 +100,7 @@ sendBtn.addEventListener('click', async function() {
             const data = await response.json();
             displayBotMessage(data.response);
         } catch (error) {
-            document.querySelector('.typing-animation').style.display = 'none';
+            hideTypingAnimation();
             console.error("Error fetching response:", error);
             displayBotMessage("Lo siento, hubo un error procesando tu pregunta. Por favor, inténtalo de nuevo más tarde.");
         }
@@ -139,8 +148,72 @@ document.getElementById('contact-form').addEventListener('submit', function (eve
 scheduleBtn.addEventListener('click', showForm);
 
 userInput.addEventListener('keydown', function(event) {
-    if (event.keyCode === 13 && userInput.value.trim() !== '') {  // 13 es el código para la tecla "Enter"
-        event.preventDefault();  // Evita el comportamiento predeterminado de "Enter" (como un salto de línea)
-        sendBtn.click();  // Simula un clic en el botón de envío
+    if (event.keyCode === 13 && userInput.value.trim() !== '') {
+        event.preventDefault();
+        sendBtn.click();
     }
+});
+
+document.getElementById("imageBtn").addEventListener('click', () => {
+    modal.style.display = "block";
+});
+
+closeModal.addEventListener('click', () => {
+    modal.style.display = "none";
+});
+
+window.addEventListener('click', (event) => {
+    if (event.target == modal) {
+        modal.style.display = "none";
+    }
+});
+
+uploadImageBtn.addEventListener('click', async () => {
+    const fileInput = document.getElementById("modalImageInput");
+    const description = document.getElementById("imageDescription").value;
+    const file = fileInput.files[0];
+
+    if (file && description) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const imageDiv = document.createElement('div');
+            imageDiv.className = 'chat-message user-message';
+            
+            const imgTag = document.createElement('img');
+            imgTag.src = e.target.result;
+            imgTag.alt = 'Imagen subida por el usuario';
+            imgTag.style.width = '50%';
+            imageDiv.appendChild(imgTag);
+
+            const descTag = document.createElement('p');
+            descTag.innerText = description;
+            imageDiv.appendChild(descTag);
+
+            chatArea.appendChild(imageDiv);
+        }
+        reader.readAsDataURL(file);
+
+        const typingAnimation = document.createElement('div');
+        typingAnimation.className = 'typing-animation';
+        chatArea.appendChild(typingAnimation);
+        
+        try {
+            const response = await fetch('http://localhost:3000/ask', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ question: description, selectedCar: selectedCar })
+            });
+
+            const data = await response.json();
+            displayBotMessage(data.response);
+        } catch (error) {
+            hideTypingAnimation();
+            console.error("Error fetching response:", error);
+            displayBotMessage("Lo siento, hubo un error procesando tu descripción. Por favor, inténtalo de nuevo más tarde.");
+        }
+    }
+    
+    modal.style.display = "none";
 });
