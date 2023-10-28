@@ -5,7 +5,7 @@ const OpenAI = require('openai');
 const axios = require('axios');
 
 
-const OPENAI_API_KEY = "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"; // Tu clave API
+const OPENAI_API_KEY = "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"; // Tu clave API
 const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
 
 const app = express();
